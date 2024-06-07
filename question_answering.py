@@ -212,6 +212,9 @@ if prompt := st.chat_input():
 
                 ############################################################################
                 response = st.session_state['chat'].messages[-1]["content"]
+                logger.log(ANALYSIS_LEVEL, response)
+                
+
                 # Split the answer into two parts: before "Reference:" and the references part
                 parts = re.split(r'Reference:\s*', response, maxsplit=1)
                 # Extract the text before "Reference:"
