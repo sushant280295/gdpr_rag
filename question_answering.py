@@ -14,7 +14,7 @@ logging.addLevelName(ANALYSIS_LEVEL, 'ANALYSIS')
 
 logging.basicConfig(level=ANALYSIS_LEVEL)
 logger = logging.getLogger(__name__)
-logger.setLevel(ANALYSIS_LEVEL)
+logger.setLevel(DEV_LEVEL)
 
 from regulations_rag.rerank import RerankAlgos
 
