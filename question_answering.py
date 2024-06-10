@@ -14,7 +14,7 @@ logging.addLevelName(ANALYSIS_LEVEL, 'ANALYSIS')
 
 logging.basicConfig(level=ANALYSIS_LEVEL)
 logger = logging.getLogger(__name__)
-logger.setLevel(DEV_LEVEL)
+logger.setLevel(ANALYSIS_LEVEL)
 
 from regulations_rag.rerank import RerankAlgos
 
@@ -29,13 +29,12 @@ st.set_page_config(page_title="💬 GDPR Question Answering", layout="wide")
 
 
 if 'user_id' not in st.session_state:
-    st.session_state['user_id'] = ""
+    st.session_state['user_id'] = "test_user"
 
 
-### Password override
+### Password
 # if "password_correct" not in st.session_state.keys():
 #     st.session_state["password_correct"] = True
-### Password override
 
 def check_password():
     """Returns `True` if the user had a correct password."""
@@ -81,10 +80,12 @@ if not check_password():
 
 
 def load_data():
+    logger.log(ANALYSIS_LEVEL, "*** Loading data. Should only happen once")
     logger.debug(f'--> cache_resource called again to reload data')
     with st.spinner(text="Loading the gdpr documents and index - hang tight! This should take 5 seconds."):
 
-        corpus_index = GDPRCorpusIndex()
+        key = st.secrets["index"]["decryption_key"]
+        corpus_index = GDPRCorpusIndex(key)
 
         rerank_algo = RerankAlgos.LLM
         rerank_algo.params["openai_client"] = st.session_state['openai_client']
@@ -136,7 +137,7 @@ with st.sidebar:
     if st.session_state['selected_model'] != st.session_state['selected_model_previous']:
         st.session_state['selected_model_previous'] = st.session_state['selected_model']
         st.session_state['chat'].chat_parameters.model = st.session_state['selected_model']
-        logger.log(ANALYSIS_LEVEL, f"{st.session_state['user_id']} changed model and is now using {st.session_state['selected_model']}")
+        # logger.log(ANALYSIS_LEVEL, f"{st.session_state['user_id']} changed model and is now using {st.session_state['selected_model']}")
 
 
     temperature = 0.0
@@ -213,7 +214,6 @@ if prompt := st.chat_input():
                 ############################################################################
                 response = st.session_state['chat'].messages[-1]["content"]
                 logger.log(ANALYSIS_LEVEL, response)
-                
 
                 # Split the answer into two parts: before "Reference:" and the references part
                 parts = re.split(r'Reference:\s*', response, maxsplit=1)

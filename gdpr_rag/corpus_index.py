@@ -22,8 +22,8 @@ from gdpr_rag.gdpr_corpus import GDPRCorpus
 import pandas as pd
 
 class GDPRCorpusIndex(CorpusIndex):
-    def __init__(self):
-        key = os.getenv('encryption_key_gdpr')
+    def __init__(self, key):
+        #key = os.getenv('encryption_key_gdpr')
 
 
         corpus = GDPRCorpus("./gdpr_rag/documents/")
