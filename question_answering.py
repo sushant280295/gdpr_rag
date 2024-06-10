@@ -80,7 +80,7 @@ if not check_password():
 
 
 def load_data():
-    logger.log(ANALYSIS_LEVEL, "*** Loading data. Should only happen once")
+    logger.log(ANALYSIS_LEVEL, f"*** Loading data for {st.session_state['user_id']}. Should only happen once")
     logger.debug(f'--> cache_resource called again to reload data')
     with st.spinner(text="Loading the gdpr documents and index - hang tight! This should take 5 seconds."):
 
@@ -128,27 +128,29 @@ st.title('GDPR: Question Answering')
 
 
 st.write(f"I am a bot designed to answer questions based on {st.session_state['chat'].index.corpus_description}. How can I assist today?")
+
+temperature = 0.0
+max_length = 1000 # Note. If you increase this, you need to amend the two instances of the following lines of code in chat_bot.py
+
 # Credentials
-with st.sidebar:
+# with st.sidebar:
 
     #st.subheader('Models and parameters')
         
-    st.session_state['selected_model'] = st.sidebar.selectbox('Choose a model', st.session_state['model_options'], key='user_selected_model')
-    if st.session_state['selected_model'] != st.session_state['selected_model_previous']:
-        st.session_state['selected_model_previous'] = st.session_state['selected_model']
-        st.session_state['chat'].chat_parameters.model = st.session_state['selected_model']
+    # st.session_state['selected_model'] = st.sidebar.selectbox('Choose a model', st.session_state['model_options'], key='user_selected_model')
+    # if st.session_state['selected_model'] != st.session_state['selected_model_previous']:
+    #     st.session_state['selected_model_previous'] = st.session_state['selected_model']
+    #     st.session_state['chat'].chat_parameters.model = st.session_state['selected_model']
         # logger.log(ANALYSIS_LEVEL, f"{st.session_state['user_id']} changed model and is now using {st.session_state['selected_model']}")
 
 
-    temperature = 0.0
-    max_length = 1000 # Note. If you increase this, you need to amend the two instances of the following lines of code in chat_bot.py
         #   if (model_to_use == "gpt-3.5-turbo" or model_to_use == "gpt-4") and total_tokens > 3500 and model_to_use!="gpt-3.5-turbo-16k":
         #                     logger.warning("!!! NOTE !!! You have a very long prompt. Switching to the gpt-3.5-turbo-16k model")
         #                     model_to_use = "gpt-3.5-turbo-16k"    
         # Because the 'hard coded' number 3500 plus this max_lenght gets very close to the default model's token limit
     # max_length = st.sidebar.slider('max_length', min_value=32, max_value=2048, value=512, step=8)
     # temperature = st.sidebar.slider('temperature', min_value=0.00, max_value=2.0, value=0.0, step=0.01)
-    st.divider()
+    # st.divider()
         
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
@@ -213,7 +215,7 @@ if prompt := st.chat_input():
 
                 ############################################################################
                 response = st.session_state['chat'].messages[-1]["content"]
-                logger.log(ANALYSIS_LEVEL, response)
+                # logger.log(ANALYSIS_LEVEL, f"Response to {st.session_state['user_id']}: {response}")
 
                 # Split the answer into two parts: before "Reference:" and the references part
                 parts = re.split(r'Reference:\s*', response, maxsplit=1)

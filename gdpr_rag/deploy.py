@@ -11,7 +11,7 @@ def deploy(base_folder):
     destination = "e:/code/chat/gdpr_rag"
 
     items_to_copy = [base_folder + "/gdpr_rag/",
-                     base_folder + "/question_answering.py",
+                     base_folder + "/Question_Answering.py",
                      base_folder + "/inputs/",
                      base_folder + "/.gitignore",
                      base_folder + "/pages/"
