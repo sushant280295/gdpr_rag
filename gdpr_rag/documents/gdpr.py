@@ -1,7 +1,6 @@
 import pandas as pd
 import re
 from regulations_rag.document import Document
-from regulations_rag.regulation_reader import  load_csv_data
 from regulations_rag.reference_checker import ReferenceChecker
 from regulations_rag.regulation_table_of_content import StandardTableOfContent
 
@@ -12,7 +11,13 @@ class GDPR(Document):
         reference_checker = self.GDPRReferenceChecker()
 
 
-        self.document_as_df = load_csv_data(path_to_file = path_to_manual_as_csv_file)
+        self.document_as_df = pd.read_csv(path_to_manual_as_csv_file, sep="|", encoding="utf-8", na_filter=False)  
+        # Check for NaN values in the DataFrame
+        if self.document_as_df.isna().any().any():
+            msg = f'Encountered NaN values while loading the GDPR manual. This will cause ugly issues with the get_regulation_detail method'
+            logger.error(msg)
+            raise ValueError(msg)
+
 
         document_name = "General Data Protection Regulation"
         super().__init__(document_name, reference_checker=reference_checker)
@@ -34,21 +39,19 @@ class GDPR(Document):
         return True
 
 
-    def get_text(self, section_reference, add_markdown_decorators = True, add_headings = True, section_only = True):
-        
-        ## NOTE add_markdown_decorators = True, add_headings = True, section_only = False not implemented 
-
+    def get_text(self, section_reference, add_markdown_decorators = True, add_headings = True, section_only = False):       
+        # section_only = True does not make a lot of sense for this document
         footnote_pattern = ''
         if self.toc_reference_checker.is_valid(section_reference):
             node = self.toc.get_node(section_reference)
             if not node.children:
                 gdpr_reference = node.full_node_name.split('.', 1)[1]
-                return self.get_text(gdpr_reference, add_markdown_decorators, footnote_pattern)
+                return self.get_text(gdpr_reference, add_markdown_decorators, add_headings, section_only)
             else:
                 all_article_text = ""
                 for child in node.children:
                     child_node_gdpr_reference = child.full_node_name.split('.', 1)[1]
-                    all_article_text = all_article_text + self.get_text(child_node_gdpr_reference, add_markdown_decorators, footnote_pattern) + "\n\n"
+                    all_article_text = all_article_text + self.get_text(child_node_gdpr_reference, add_markdown_decorators, add_headings, section_only) + "\n\n"
                 return all_article_text
 
         if not self.reference_checker.is_valid(section_reference):
@@ -75,21 +78,21 @@ class GDPR(Document):
 
         space = " "
         line_end = "\n"
-        heading = ''
         formatted_regulation = ""
         if add_markdown_decorators:
             space = '&nbsp;'
             line_end = "\n\n"
             formatted_regulation = "# "
 
-        formatted_regulation = formatted_regulation + f"{subframe.iloc[0]['article_number']} {subframe.iloc[0]['article_heading']}{line_end}"  
+        if add_headings:
+            formatted_regulation = formatted_regulation + f"{subframe.iloc[0]['article_number']} {subframe.iloc[0]['article_heading']}{line_end}"  
+        
         for index, row in subframe.iterrows():
-
             line = row["content"] + line_end
             if row["minor_reference"]:
-                line = 2 * 4 * space + heading + f"({row['minor_reference']}) " + line
+                line = 2 * 4 * space + f"({row['minor_reference']}) " + line
             elif row["major_reference"]:
-                line = 1 * 4 * space + heading + f"{row['major_reference']}. " + line
+                line = 1 * 4 * space + f"{row['major_reference']}. " + line
             else:
                 line = line
 
@@ -150,7 +153,7 @@ class GDPR(Document):
 
         gdpr_df_for_tree = pd.DataFrame(gdpr_data_for_tree, columns = ["section_reference", "heading", "text"])
 
-        return StandardTableOfContent(root_node_name = self.name, index_checker = self.GDPRToCReferenceChecker(), regulation_df = gdpr_df_for_tree)
+        return StandardTableOfContent(root_node_name = self.name, reference_checker = self.GDPRToCReferenceChecker(), regulation_df = gdpr_df_for_tree)
 
     class GDPRReferenceChecker(ReferenceChecker):
         def __init__(self):
@@ -166,9 +169,38 @@ class GDPR(Document):
             # (\d{1,2}): Captures a one or two digit number immediately following "Article ". - mandatory
             # (?:\((\d{1,2})\))?: An optional non-capturing group that contains a capturing group for a one or two digit number enclosed in parentheses. The entire group is made optional by ?, so it matches 0 or 1 times.
             # (?:\(([a-z])\))?: Another optional non-capturing group that contains a capturing group for a single lowercase letter enclosed in parentheses. This part is also optional.
-            text_pattern = r'(\d{1,2})(?:\((\d{1,2})\))?(?:\(([a-z])\))?'
+            text_pattern = r'\d{1,2})(?:\((\d{1,2})\))?(?:\(([a-z])\)'
 
             super().__init__(regex_list_of_indices = gdpr_index_patterns, text_version = text_pattern, exclusion_list=exclusion_list)
+
+        # Often GDPR references are prefixed with the word Article. We need to remove this for the reference checker to work
+        def remove_prefix(self, reference):
+            if reference.lower().startswith("article "):
+                reference = reference[8:]
+            return reference
+
+        def is_valid(self, reference):
+            return super().is_valid(self.remove_prefix(reference))
+            
+        def extract_valid_reference(self, input_string):
+            return super().extract_valid_reference(self.remove_prefix(input_string))
+
+        def split_reference(self, reference):
+            return super().split_reference(self.remove_prefix(reference))
+
+        def get_parent_reference(self, input_string):
+            return super().get_parent_reference(self.remove_prefix(input_string))
+
+        def get_current_and_parent_references(self, reference):
+            return super().get_current_and_parent_references(self.remove_prefix(reference))
+
+        def is_reference_or_parents_in_list(self, reference, list_of_references):
+            return super().is_reference_or_parents_in_list(self.remove_prefix(reference), list_of_references)
+
+        def _extract_reference_from_string(self, s):
+            return super()._extract_reference_from_string(self.remove_prefix(s))
+
+
 
 
     # Reference checker for TOC only

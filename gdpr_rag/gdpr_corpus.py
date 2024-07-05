@@ -29,3 +29,7 @@ class GDPRCorpus(Corpus):
         document_dictionary = create_document_dictionary_from_folder(folder, globals())
         super().__init__(document_dictionary)
 
+    def get_primary_document(self):
+        return "GDPR"
+
+

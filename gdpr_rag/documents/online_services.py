@@ -1,6 +1,5 @@
 import re
 import pandas as pd
-from regulations_rag.regulation_reader import  load_csv_data
 from regulations_rag.document import Document
 from regulations_rag.reference_checker import ReferenceChecker
 from regulations_rag.reference_checker import MultiReferenceChecker
@@ -14,7 +13,6 @@ class OnlineServices(Document):
         reference_checker =  self.OnlineServicesReferenceChecker()
 
 
-        #self.document_as_df = load_csv_data(path_to_file = path_to_manual_as_csv_file)
         self.document_as_df = pd.read_parquet(path_to_manual_as_csv_file, engine = 'pyarrow')
 
         document_name = "Guidelines 2/2019 on the processing of personal data under Article 6(1)(b) GDPR in the context of the provision of online services to data subjects"
@@ -41,7 +39,7 @@ class OnlineServices(Document):
         return super().get_heading(section_reference, add_markdown_decorators)
 
     def get_toc(self):
-        return StandardTableOfContent(root_node_name = self.name, index_checker = self.reference_checker, regulation_df = self.document_as_df)
+        return StandardTableOfContent(root_node_name = self.name, reference_checker = self.reference_checker, regulation_df = self.document_as_df)
 
 
     class OnlineServicesReferenceChecker(ReferenceChecker):

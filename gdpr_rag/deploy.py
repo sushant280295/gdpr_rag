@@ -14,6 +14,7 @@ def deploy(base_folder):
                      base_folder + "/Question_Answering.py",
                      base_folder + "/inputs/",
                      base_folder + "/.gitignore",
+                     base_folder + "/.streamlit/secrets.toml",
                      base_folder + "/pages/"
                      ]
 

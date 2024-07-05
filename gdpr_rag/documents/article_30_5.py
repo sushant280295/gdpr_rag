@@ -1,5 +1,4 @@
 import pandas as pd
-from regulations_rag.regulation_reader import  load_csv_data
 from regulations_rag.document import Document
 from regulations_rag.regulation_table_of_content import StandardTableOfContent
 
@@ -11,7 +10,12 @@ class Article_30_5(Document):
     def __init__(self, path_to_manual_as_csv_file = "./inputs/documents/article_30_5.csv"):
         reference_checker = EmptyReferenceChecker()
 
-        self.document_as_df = load_csv_data(path_to_file = path_to_manual_as_csv_file)
+        self.document_as_df = pd.read_csv(path_to_manual_as_csv_file, sep="|", encoding="utf-8", na_filter=False)  
+        # Check for NaN values in the DataFrame
+        if self.document_as_df.isna().any().any():
+            msg = f'Encountered NaN values while loading the GDPR manual. This will cause ugly issues with the get_regulation_detail method'
+            logger.error(msg)
+            raise ValueError(msg)
 
         document_name = "WORKING PARTY 29 POSITION PAPER on the derogations from the obligation to maintain records of processing activities pursuant to Article 30(5) GDPR"
         super().__init__(document_name, reference_checker=reference_checker)
@@ -41,5 +45,5 @@ class Article_30_5(Document):
             return ""
 
     def get_toc(self):
-        return StandardTableOfContent(root_node_name = self.name, index_checker = self.reference_checker, regulation_df = self.document_as_df)
+        return StandardTableOfContent(root_node_name = self.name, reference_checker = self.reference_checker, regulation_df = self.document_as_df)
 

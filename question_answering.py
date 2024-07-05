@@ -18,11 +18,11 @@ logger.setLevel(ANALYSIS_LEVEL)
 
 from regulations_rag.rerank import RerankAlgos
 
-from regulations_rag.regulation_chat import ChatParameters
-from regulations_rag.regulation_index import  EmbeddingParameters
+from regulations_rag.corpus_chat import ChatParameters
+from regulations_rag.embeddings import  EmbeddingParameters
+from regulations_rag.corpus_chat import CorpusChat
 
 from gdpr_rag.corpus_index import GDPRCorpusIndex
-from gdpr_rag.corpus_chat import CorpusChat
 
 # App title - Must be first Streamlit command
 st.set_page_config(page_title="💬 GDPR Question Answering", layout="wide")
