@@ -48,7 +48,7 @@ pytz==2024.1
 rapidfuzz==3.7.0
 referencing==0.35.1
 regex==2023.12.25
-regulations-rag==0.7.0.9
+regulations_rag @ git+https://github.com/sjondavey/regulations_rag.git@v0.7.0.9
 requests==2.31.0
 rich==13.7.1
 rpds-py==0.18.1
